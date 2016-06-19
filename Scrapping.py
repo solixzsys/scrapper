@@ -321,12 +321,17 @@ class PunchScrapper:
                 print(e,'\n')
                 input('ENTER to exit')
         
-        level1_postlist=soup.find_all('div',attrs={'class':'td-module-thumb'})
+        #level1_postlist=soup.find_all('div',attrs={'class':'td-module-thumb'})
+        level1_postlist=soup.find_all('h3',attrs={'class':'entry-title td-module-title'})
         
         if len(level1_postlist)>0:
             for post in level1_postlist:
+                
                 self.POST_URL= post.a.attrs.get('href')
-                self.POST_IMG_SRC= post.img.attrs.get('src')
+                try:
+                    self.POST_IMG_SRC= post.img.attrs.get('src')
+                except Exception as e:
+                    pass
                 self.POST_HEADING= post.a.attrs.get('title')
                 self.POST_ID=hashlib.md5(self.POST_HEADING.encode()).hexdigest()
                 self.POST_SUMMARY=''
