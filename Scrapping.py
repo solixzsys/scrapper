@@ -197,9 +197,13 @@ class YahooRssScrapper:
 
 class AlMonitorScrapper:
     SITE_URL='http://www.al-monitor.com'
+    SITE_NAME='Al-Monitor'
+    POST_DATE=''
+    POST_ID=''
     POST_URL=''
     POST_HEADING=''
     POST_SUMMARY=''
+    POST_FULLSTORY=''
     POST_IMG_SRC=''
     POSTS={}
     key=0
@@ -289,6 +293,7 @@ class PunchScrapper:
     SITE_URL='http://www.punchng.com'
     SITE_NAME='Punch'
     POST_DATE=''
+
     POST_ID=''
     POST_URL=''
     POST_HEADING=''
@@ -334,6 +339,10 @@ class PunchScrapper:
                     pass
                 self.POST_HEADING= post.a.attrs.get('title')
                 self.POST_ID=hashlib.md5(self.POST_HEADING.encode()).hexdigest()
+                try:
+                    self.POST_DATE=post.parent.find('div',attrs={'class':'td-post-date'}).text
+                except Exception as e:
+                    pass
                 self.POST_SUMMARY=''
                 
 
@@ -354,6 +363,9 @@ class PunchScrapper:
                 try:
                     items=soup2.find('div',attrs={'class':'td-post-content'})
                     self.POST_IMG_SRC=items.figure.a.attrs.get('href')
+                    if self.POST_IMG_SRC=="":
+                        self.POST_IMG_SRC=items.a.attrs.get('href')
+
                 except Exception as e:
                     pass
               
@@ -373,7 +385,7 @@ class PunchScrapper:
                 
 
 
-                self.POSTS[self.key]={'post_id':self.POST_ID,'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY,'full_story':self.POST_FULLSTORY}
+                self.POSTS[self.key]={'real_date':self.POST_DATE,'post_id':self.POST_ID,'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY,'full_story':self.POST_FULLSTORY}
                 self.key=self.key+1
 
                 print(self.key)
@@ -421,12 +433,13 @@ if __name__=='__main__':
             heading=str(post_dict[i]['heading'])
             summary=str(post_dict[i]['summary'])
             p_linkn=str(post_dict[i]['post_link'])
-            p_date=datetime.today()
+            p_date=str(post_dict[i]['real_date'])
+            scrap_date=datetime.today()
             fullstory=str(post_dict[i]['full_story'])
             img=str(post_dict[i]['img'])
             s_name=str(post_dict[i]['site_name'])
             try:
-                cur.execute('insert into post_tb_01 values(?,?,?,?,?,?,?,?,?,?)',[id,p_id,s_linkn,heading,summary,fullstory,s_name,p_date,img,p_linkn])
+                cur.execute('insert into post_tb_01 values(?,?,?,?,?,?,?,?,?,?,?)',[id,p_id,s_linkn,heading,summary,fullstory,s_name,p_date,img,p_linkn,scrap_date])
             except Exception as e:
                 print(e)
         except Exception as e:
