@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os,sys
 from bs4 import  BeautifulSoup as bs
-import re
+import re,hashlib
 import requests
 from sys import stdout
 
@@ -287,9 +287,13 @@ class AlMonitorScrapper:
         return self.POSTS  
 class PunchScrapper:
     SITE_URL='http://www.punchng.com'
+    SITE_NAME='Punch'
+    POST_DATE=''
+    POST_ID=''
     POST_URL=''
     POST_HEADING=''
     POST_SUMMARY=''
+    POST_FULLSTORY=''
     POST_IMG_SRC=''
     POSTS={}
     key=0
@@ -324,6 +328,7 @@ class PunchScrapper:
                 self.POST_URL= post.a.attrs.get('href')
                 self.POST_IMG_SRC= post.img.attrs.get('src')
                 self.POST_HEADING= post.a.attrs.get('title')
+                self.POST_ID=hashlib.md5(self.POST_HEADING.encode()).hexdigest()
                 self.POST_SUMMARY=''
                 
 
@@ -349,15 +354,18 @@ class PunchScrapper:
               
                 
                 para=""
-                for item in items.find_all('p',recursive=False):
+                try:
+                    for item in items.find_all('p',recursive=False):
                     
-                    para=para+"\n"+item.text
+                        para=para+"\n"+item.text
+                        self.POST_FULLSTORY=para
+                        self.POST_SUMMARY=para[:200]
+                except Exception as e:
+                    pass
+                
 
-                self.POST_SUMMARY=para
 
-
-
-                self.POSTS[self.key]={'heading':self.POST_HEADING,'link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+                self.POSTS[self.key]={'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
                 self.key=self.key+1
                 print(self.key)
             
@@ -377,48 +385,31 @@ class PunchScrapper:
 
 import sys,codecs,sqlite3
 if __name__=='__main__':
-    print('Starting Scrapper....................')
-    if len(sys.argv)>1:
-        #scrapper=YahooNewsScrapper(sys.argv[1])
-        scrapper=YahooRssScrapper(sys.argv[1])
-    else:
-        pass
-        #scrapper=YahooNewsScrapper()
-        #scrapper=UPIScrapper()
-        #scrapper=YahooRssScrapper()
-        #scrapper= AlMonitorScrapper()
-        #post=scrapper.get_Post()
-        #scrapper= PunchScrapper()
-    with open("data.html","w",encoding="ascii",errors="ignore") as f:
-        scrapper= UPIScrapper()
-        post_dict=scrapper.POSTS
+   
+    scrapper= PunchScrapper()
+    post_dict=scrapper.POSTS
 
-        l=len(post_dict)
-        print(l)
-        i=0
-        con=sqlite3.connect("testing.db")
-        cur=con.cursor()
-        #query='CREATE  TABLE  IF NOT EXISTS "{0}" ("id" INTEGER,"link" VARCHAR,"heading" TEXT,"summary" TEXT )'.format("post")
-        #cur.execute(query)
-        while(i<l):
+    l=len(post_dict)
+    print(l)
+    i=0
+    con=sqlite3.connect("post_pro01.sqlite")
+    cur=con.cursor()
+    
+    while(i<l):
+        try:
+            
+            print('insert ',i)
+            lin=str(post_dict[i]['link'])
+            h=str(post_dict[i]['heading'])
+            s=str(post_dict[i]['summary'])
             try:
-                #con=sqlite3.connect("testing.db")
-
-                #cur=con.cursor()
-
-               
-                print('insert ',i)
-                lin=str(post_dict[i]['link'])
-                h=str(post_dict[i]['heading'])
-                s=str(post_dict[i]['summary'])
-                try:
-                    cur.execute('insert into post values(?,?,?,?)',[i,lin,h,s])
-                except Exception as e:
-                    print(e)
+                cur.execute('insert into post values(?,?,?,?)',[i,lin,h,s])
             except Exception as e:
                 print(e)
-            finally: 
-                con.commit()
-                #con.close()  
-                f.writelines(str(i)+". "+post_dict[i]['heading']+'<p>')
-                i=i+1
+        except Exception as e:
+            print(e)
+        finally: 
+            con.commit()
+            #con.close()  
+            f.writelines(str(i)+". "+post_dict[i]['heading']+'<p>')
+            i=i+1
