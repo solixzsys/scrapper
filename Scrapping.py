@@ -354,21 +354,31 @@ class PunchScrapper:
               
                 
                 para=""
+                redline='Copyright PUNCH'
                 try:
                     for item in items.find_all('p',recursive=False):
-                    
-                        para=para+"\n"+item.text
-                        self.POST_FULLSTORY=para
-                        self.POST_SUMMARY=para[:200]
+                        itemtxt=item.text
+                        if itemtxt.find(redline)>=0:
+                            break
+                        para=para+"\n"+itemtxt
+                    self.POST_FULLSTORY=para
+                    self.POST_SUMMARY=para[:150]
                 except Exception as e:
                     pass
                 
 
 
-                self.POSTS[self.key]={'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+                self.POSTS[self.key]={'post_id':self.POST_ID,'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY,'full_story':self.POST_FULLSTORY}
                 self.key=self.key+1
+
                 print(self.key)
-            
+                self.POST_DATE=''
+                self.POST_ID=''
+                self.POST_URL=''
+                self.POST_HEADING=''
+                self.POST_SUMMARY=''
+                self.POST_FULLSTORY=''
+                self.POST_IMG_SRC=''
 
        
                 
@@ -384,6 +394,7 @@ class PunchScrapper:
 
 
 import sys,codecs,sqlite3
+from datetime import datetime
 if __name__=='__main__':
    
     scrapper= PunchScrapper()
@@ -392,24 +403,30 @@ if __name__=='__main__':
     l=len(post_dict)
     print(l)
     i=0
-    con=sqlite3.connect("post_pro01.sqlite")
+    con=sqlite3.connect("db/staging.sqlite")
     cur=con.cursor()
-    
+    post_count=cur.execute('SELECT COUNT(*) FROM post_tb_01').fetchone()[0]
     while(i<l):
         try:
-            
+            post_count=post_count+1
             print('insert ',i)
-            lin=str(post_dict[i]['link'])
-            h=str(post_dict[i]['heading'])
-            s=str(post_dict[i]['summary'])
+            id=post_count
+            p_id=str(post_dict[i]['post_id'])
+            s_linkn=str(post_dict[i]['site_link'])
+            heading=str(post_dict[i]['heading'])
+            summary=str(post_dict[i]['summary'])
+            p_linkn=str(post_dict[i]['post_link'])
+            p_date=datetime.today()
+            fullstory=str(post_dict[i]['full_story'])
+            img=str(post_dict[i]['img'])
+            s_name=str(post_dict[i]['site_name'])
             try:
-                cur.execute('insert into post values(?,?,?,?)',[i,lin,h,s])
+                cur.execute('insert into post_tb_01 values(?,?,?,?,?,?,?,?,?,?)',[id,p_id,s_linkn,heading,summary,fullstory,s_name,p_date,img,p_linkn])
             except Exception as e:
                 print(e)
         except Exception as e:
             print(e)
         finally: 
             con.commit()
-            #con.close()  
-            f.writelines(str(i)+". "+post_dict[i]['heading']+'<p>')
+            
             i=i+1
