@@ -356,10 +356,9 @@ class PunchScrapper:
                 except Exception as e:
                     print("Error from Requests Module\n")
                     print(e,'\n')
-                    #input('ENTER to exit')
-                    #sys.exit()
+                   
                     pass
-                #level3_postlist=soup2.find('div',attrs={'id','c_story'}) 
+               
                 try:
                     items=soup2.find('div',attrs={'class':'td-post-content'})
                     self.POST_IMG_SRC=items.figure.a.attrs.get('href')
