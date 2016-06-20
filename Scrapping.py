@@ -363,11 +363,14 @@ class PunchScrapper:
                 try:
                     items=soup2.find('div',attrs={'class':'td-post-content'})
                     self.POST_IMG_SRC=items.figure.a.attrs.get('href')
-                    if self.POST_IMG_SRC=="":
+                    print('src1... ',self.POST_IMG_SRC)
+                except Exception as e:          
+                    try:
                         self.POST_IMG_SRC=items.a.attrs.get('href')
+                        print('src2... ',self.POST_IMG_SRC)
+                    except Exception as e:
+                        pass
 
-                except Exception as e:
-                    pass
               
                 
                 para=""
