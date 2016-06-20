@@ -241,7 +241,39 @@ class AlMonitorScrapper:
                 self.POST_SUMMARY=post.attrs.get('title')
                 
 
-                self.POSTS[self.key]={'heading':self.POST_HEADING,'link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+
+
+
+                try:
+                    html=requests.get(self.POST_URL)
+                    soup2=bs(html.content,)
+
+                except Exception as e:
+                    print("Error from Requests Module\n")
+                    print(e,'\n')
+                    #input('ENTER to exit')
+                    #sys.exit()
+                    pass
+                #level3_postlist=soup2.find('div',attrs={'id','c_story'}) 
+                items=soup2.find('div',attrs={'class':'span8','id':'leftcolumn'})
+                self.POST_IMG_SRC=self.SITE_URL + items.img.attrs.get('src')
+                self.POST_HEADING=items.div.h2.text
+                
+                para=""
+                for item in items.find_all('p'):
+                    if (len(item.attrs) ==0):
+                        para=para+"<br>"+item.text
+
+                self.POST_SUMMARY=para[:150]
+                self.POST_FULLSTORY=para
+                self.POST_DATE=datetime.today()
+                self.POST_ID=hashlib.md5(self.POST_HEADING.encode()).hexdigest()
+
+
+
+                #self.POSTS[self.key]={'heading':self.POST_HEADING,'link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+                self.POSTS[self.key]={'real_date':self.POST_DATE,'post_id':self.POST_ID,'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY,'full_story':self.POST_FULLSTORY}
+               
                 self.key=self.key+1
         # Grabing Breaking News 
         breakingnews=soup.find('div',attrs={"class":"span3 contentRow special"})
@@ -268,17 +300,21 @@ class AlMonitorScrapper:
                 items=soup2.find('div',attrs={'class':'span8','id':'leftcolumn'})
                 self.POST_IMG_SRC=self.SITE_URL + items.img.attrs.get('src')
                 self.POST_HEADING=items.div.h2.text
+                self.POST_DATE=datetime.today()
+                self.POST_ID=hashlib.md5(self.POST_HEADING.encode()).hexdigest()
                 
                 para=""
                 for item in items.find_all('p'):
                     if (len(item.attrs) ==0):
-                        para=para+"\n"+item.text
+                        para=para+"<br>"+item.text
 
-                self.POST_SUMMARY=para
+                self.POST_SUMMARY=para[:150]
+                self.POST_FULLSTORY=para
 
 
-
-                self.POSTS[self.key]={'heading':self.POST_HEADING,'link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+                #self.POSTS[self.key]={'heading':self.POST_HEADING,'link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY}
+                self.POSTS[self.key]={'real_date':self.POST_DATE,'post_id':self.POST_ID,'heading':self.POST_HEADING,'site_link':self.SITE_URL,'site_name':self.SITE_NAME,'post_link':self.POST_URL,'img':self.POST_IMG_SRC,'summary':self.POST_SUMMARY,'full_story':self.POST_FULLSTORY}
+               
                 self.key=self.key+1
                 print(self.key)
             except:
@@ -416,7 +452,7 @@ import sys,codecs,sqlite3
 from datetime import datetime
 if __name__=='__main__':
    
-    scrapper= PunchScrapper()
+    scrapper= AlMonitorScrapper()
     post_dict=scrapper.POSTS
 
     l=len(post_dict)
